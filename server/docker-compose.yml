@@ -1,0 +1,48 @@
+version: '3'
+services:
+  # Database
+  db:
+    image: mysql:5.7
+    volumes:
+      - mysql-data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: edibles
+      MYSQL_PASSWORD: root
+    ports:
+      - '3307:3306'
+    networks:
+      - tusu-network-dev
+  # phpmyadmin
+  phpmyadmin:
+    depends_on:
+      - db
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - '8080:80'
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+      - tusu-network-dev
+  redis:
+    image: 'redis:6.0'
+    ports:
+      - '${FORWARD_REDIS_PORT:-6379}:6379'
+    volumes:
+      - 'redis:/data'
+    networks:
+      - tusu-network-dev
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      retries: 3
+      timeout: 5s
+networks:
+  tusu-network-dev:
+volumes:
+  redis:
+    driver: local
+  mysql-data:
+    driver: local
